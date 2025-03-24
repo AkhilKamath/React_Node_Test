@@ -43,21 +43,65 @@ const AddMeeting = (props) => {
         initialValues: initialValues,
         validationSchema: MeetingSchema,
         onSubmit: (values, { resetForm }) => {
-            
+            AddData();
+            resetForm();
         },
     });
     const { errors, touched, values, handleBlur, handleChange, handleSubmit, setFieldValue } = formik
 
     const AddData = async () => {
-
+        try {
+            setIsLoding(true)
+            let response = await postApi('api/meeting/add', values)
+            if (response.status === 200) {
+                props.onClose();
+                formik.resetForm();
+                props.setAction((pre) => !pre)
+            } else {
+                toast.error("Failed to add meeting.");
+            }
+        } catch (error) {
+            console.error("Error adding meeting.", error);
+            toast.error("Error adding meeting.");
+        }
+        finally {
+            setIsLoding(false)
+        }
     };
 
     const fetchAllData = async () => {
-        
+        try {
+            setIsLoding(true);
+    
+            // Fetch Contact data if related is Contact
+            if (values.related === "Contact") {
+                const contactResponse = await getApi("api/contact/");
+                if (contactResponse?.status === 200) {
+                    setContactData(contactResponse.data);
+                } else {
+                    toast.error("Failed to fetch contact data.");
+                }
+            }
+    
+            // Fetch Lead data if related is Lead
+            if (values.related === "Lead") {
+                const leadResponse = await getApi("api/lead/");
+                if (leadResponse?.status === 200) {
+                    setLeadData(leadResponse.data);
+                } else {
+                    toast.error("Failed to fetch lead data.");
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            toast.error("Error fetching data.");
+        } finally {
+            setIsLoding(false);
+        }
     }
 
     useEffect(() => {
-
+        fetchAllData();
     }, [props.id, values.related])
 
     const extractLabels = (selectedItems) => {
@@ -67,7 +111,7 @@ const AddMeeting = (props) => {
     const countriesWithEmailAsLabel = (values.related === "Contact" ? contactdata : leaddata)?.map((item) => ({
         ...item,
         value: item._id,
-        label: values.related === "Contact" ? `${item.firstName} ${item.lastName}` : item.leadName,
+        label: values.related === "Contact" ? `${item.fullName}` : item.leadName,
     }));
 
     return (
