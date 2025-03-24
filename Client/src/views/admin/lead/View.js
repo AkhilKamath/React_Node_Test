@@ -151,7 +151,7 @@ const View = () => {
     const MeetingColumns = [
         {
             Header: 'Agenda', accessor: 'agenda', cell: (cell) => (
-                <Link to={`/metting/${cell?.row?.original?._id}`}>
+                <Link to={`/meeting/${cell?.row?.original?._id}`}>
                     <Text
                         me="10px"
                         sx={{ '&:hover': { color: 'blue.500', textDecoration: 'underline' } }}

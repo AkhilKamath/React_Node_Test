@@ -313,7 +313,7 @@ const routes = [
   {
     name: "Meetings",
     layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
-    path: "/metting",
+    path: "/meeting",
     icon: <Icon as={SiGooglemeet} width='20px' height='20px' color='inherit' />,
     component: Meeting,
   },
@@ -322,7 +322,7 @@ const routes = [
     layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
     under: "Meetings",
     parentName: "Meetings",
-    path: "/metting/:id",
+    path: "/meeting/:id",
     component: MettingView,
   },
   // ------------- Phone Routes ------------------------

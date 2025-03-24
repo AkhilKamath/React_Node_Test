@@ -121,7 +121,7 @@ export default function UserReports() {
   const navigateTo = {
     Lead: '/lead',
     Contact: '/contacts',
-    Meeting: '/metting',
+    Meeting: '/meeting',
     Call: '/phone-call',
     Task: '/task',
     Email: '/email',
