@@ -13,8 +13,7 @@ const add = async (req, res) => {
 }
 
 const index = async (req, res) => {
-    const query = req.query
-    query.deleted = false;
+    const query = { ...req.query, deleted: false };
 
     let allData = await MeetingHistory.aggregate([
         {
@@ -29,7 +28,10 @@ const index = async (req, res) => {
             }
         },
         {
-            $unwind: '$createByDetails'
+            $unwind: {
+                path: '$createByDetails',
+                preserveNullAndEmptyArrays: false // exclude documents where the 'createByDetails' field is null
+            }
         },
         {
             $match: { 'createByDetails.deleted': false }
@@ -48,11 +50,10 @@ const index = async (req, res) => {
         }
     ]);
 
-    const result = allData.filter(item => item.createBy !== null);
     try {
-        res.send(result)
+        res.send(allData);
     } catch (error) {
-        res.send(error)
+        res.send(error);
     }
 }
 
@@ -60,7 +61,10 @@ const view = async (req, res) => {
     try {
         let meeting = await MeetingHistory.aggregate([
             {
-                $match: { _id: new mongoose.Types.ObjectId(req.params.id) } // match the meeting by its ID
+                $match: { 
+                    _id: new mongoose.Types.ObjectId(req.params.id), // match the meeting by its ID
+                    deleted: false
+                }
             },
             {
                 $lookup: {
@@ -71,7 +75,10 @@ const view = async (req, res) => {
                 }
             },
             {
-                $unwind: '$createByDetails'
+                $unwind: {
+                    path: '$createByDetails',
+                    preserveNullAndEmptyArrays: false // exclude documents where the 'createByDetails' field is null
+                }
             },
             {
                 $match: { 'createByDetails.deleted': false } // filter out deleted users
@@ -96,29 +103,19 @@ const view = async (req, res) => {
                 $addFields: {
                     createdByName: {
                         $concat: ['$createByDetails.firstName', ' ', '$createByDetails.lastName'] // Combine firstName and lastName
-                    },
-                    // 'attendes': {
-                    //     $map: {
-                    //         input: '$attendes', // Map over the 'attendes' array
-                    //         as: 'attendee',
-                    //         in: {
-                    //             _id: '$$attendee._id',
-                    //             firstName: { $arrayElemAt: [{ $split: ['$$attendee.fullName', ' '] }, 0] }, // Get the first part as firstName
-                    //             lastName: {  $ifNull: [
-                    //                 { $arrayElemAt: [{ $split: ['$$attendee.fullName', ' '] }, 1] }, // Get the second part as lastName
-                    //                 '' // Default value
-                    //             ] }
-                    //         }
-                    //     }
-                    // },
+                    }
                 }
             },
             {
                 $project: {
-                    'createByDetails': 0 // remove the 'createByDetails' field from the result
+                    'createByDetails': 0
                 }
             }
         ]);
+
+        if (!meeting.length) {
+            return res.status(404).json({ message: 'Meeting not found.' });
+        }
 
         res.status(200).json(meeting[0]);
     } catch (error) {
